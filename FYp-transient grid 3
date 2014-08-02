@@ -532,7 +532,7 @@ def pde(t,y,Dia,kma,Dib,kmb,Dic,kmc,Dit,hm,Cp_a,rho_a,Deas,RCO,Debs,RCO2,Decs,RH
 
 #independent variable
 
-f = scipy.integrate.ode(pde).set_integrator('vode',method = 'bdf', order =15,atol = 1E-5, rtol = 1E-5)
+f = scipy.integrate.ode(pde).set_integrator('vode',method = 'bdf', order =15,atol = 1E-5, rtol = 1E-5,nsteps =20000)
 f.set_initial_value(Y7,0).set_f_params(Dia,kma,Dib,kmb,Dic,kmc,Dit,hm,Cp_a,rho_a,Deas,RCO,Debs,RCO2,Decs,RHC,Ds,dHRP,rho_s,Cp_s)
 time = np.zeros(n_steps)
 a = []
