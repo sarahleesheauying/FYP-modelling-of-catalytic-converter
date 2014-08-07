@@ -704,7 +704,7 @@ while f.successful() and f.t < tf:
             dHRP[i,jj]=-2.059E6+72.3*Tks[i,jj]-9.69E-2*Tks[i,jj]**2+4.34E-5*Tks[i,jj]**3+7.56e-9*Tks[i,jj]**4
 
 
-    print f.t
+    print (f.t)
     t+= 1
     f.set_initial_value(Y7,f.t)
 
