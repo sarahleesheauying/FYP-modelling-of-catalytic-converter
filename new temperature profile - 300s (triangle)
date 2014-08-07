@@ -2,7 +2,6 @@ import numpy as np
 import scipy
 import matplotlib.pylab as plot
 import math
-import cmath
 import scipy.integrate
 
 #Parameter
