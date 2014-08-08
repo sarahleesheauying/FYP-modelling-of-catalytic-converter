@@ -103,8 +103,6 @@ act5    = 11611.0               #Activation energy
 YO2     = 0.0933                #Oxygen mole fraction      
 DH      = 1.09E-3               #Hydraulic diameter                                                #m
 ff      = 1.0
-dHR     = -282.55E3             #Heat of reaction of CO                                            #kJ/mol.K
-Pr      = 0.7                   #Prandtl number
 
 #Time (ODE integration)
 tf      = 300                   #Final integration time 
@@ -115,35 +113,140 @@ nout    = tf                    #Final integration time
 n_steps = np.floor((tf-t0)/td)+1#Number of discretization
 
 #Set array to zeros                                           
-v       = Dca = Dcb = Dcc = Dia = Dib = Dic = np.zeros(nz)                      #Bulk diffusion coefficient and dispersion coefficient 
-k_a     = rho_a = Cp_a = Dt = Dit = miu = np.zeros(nz)                          #Thermal diffusion coefficient in the fluid (Air) 
-Rey     = L = Gz = NuT = NuH = Nu = Sh = hm = kma = kmb = kmc = np.zeros(nz)    #Gas phase(Dimensionless number) and transfer coefficients and assume mass-heat transfer analogy
-k_s     = rho_s = Cp_s = Ds = np.zeros((nz,ns))                                 #Parameter for thermal effective diffusivity in the washcoat
-YCO     = YCO2 = YHC = np.zeros((nz,ns))                                        #Mol fraction in the solid phase
-k_u     = rho_u = Cp_u = Du = np.zeros((nz,nu))                                 #Thermal effective diffusivity in the washcoat
-Tkuu    = Tkuuu = Tkuzz = np.zeros((nz,nu))                                     #Derivative groups in radial direction (solid coerdierite phase) 
-Yaz     = Ybz = Ycz = Tkz = np.zeros(nz)                                        #First derivative groups in axial direction (gas and solid phase)
-Yazz    = Ybzz = Yczz = Tkzz = np.zeros(nz)                                     #Second derivative groups in axial direction (gas and solid phase)
-Yass    = Ybss = Ycss = Tkss = np.zeros((nz,ns))                                #First derivative groups in radial direction (solid phase) 
-Yasss   = Ybsss = Ycsss = Tksss = np.zeros((nz,ns))                             #Second derivative groups in radial direction (solid phase) 
-Yaszz   = Ybszz = Ycszz = Tkszz = np.zeros((nz,ns))                             #Second derivative groups in radial direction (solid phase)                                
+#Bulk diffusion coefficient and dispersion coefficient 
+v = np.zeros(nz)
+Dca = np.zeros(nz)
+Dcb = np.zeros(nz)
+Dcc = np.zeros(nz)
+Dia = np.zeros(nz)
+Dib = np.zeros(nz)
+Dic = np.zeros(nz)
+
+#Thermal diffusion coefficient in the fluid (Air) 
+k_a = np.zeros(nz)
+rho_a = np.zeros(nz)
+Cp_a = np.zeros(nz)
+Dt = np.zeros(nz)
+Dit = np.zeros(nz)
+miu = np.zeros(nz)
+
+#Gas phase(Dimensionless number) and transfer coefficients and assume mass-heat transfer analogy
+Rey = np.zeros(nz)
+L = np.zeros(nz)
+Gz = np.zeros(nz)
+NuT = np.zeros(nz)
+NuH = np.zeros(nz)
+Nu = np.zeros(nz)
+Sh = np.zeros(nz)
+hm = np.zeros(nz)
+kma = np.zeros(nz)
+kmb = np.zeros(nz)
+kmc = np.zeros(nz)
 
 #Parameter for effective diffusivity of washcoat
-Dcas    = Dcbs = Dccs = np.zeros((nz,ns))
-Dkas    = Dkbs = Dkcs = np.zeros((nz,ns))
-Dvas    = Dvbs = Dvcs = np.zeros((nz,ns))
-Deas    = Debs = Decs = np.zeros((nz,ns))
+Dcas = np.zeros((nz,ns))
+Dcbs = np.zeros((nz,ns))
+Dccs = np.zeros((nz,ns))
+
+Dkas = np.zeros((nz,ns))
+Dkbs = np.zeros((nz,ns))
+Dkcs = np.zeros((nz,ns))
+
+Dvas = np.zeros((nz,ns))
+Dvbs = np.zeros((nz,ns))
+Dvcs = np.zeros((nz,ns))
+
+Deas = np.zeros((nz,ns))
+Debs = np.zeros((nz,ns))
+Decs = np.zeros((nz,ns))
+
+#Parameter for thermal effective diffusivity in the washcoat
+k_s = np.zeros((nz,ns))
+rho_s = np.zeros((nz,ns))
+Cp_s = np.zeros((nz,ns))
+Ds = np.zeros((nz,ns))
+
+#Mol fraction in the solid phase
+YCO = np.zeros((nz,ns))
+YCO2 = np.zeros((nz,ns))
+YHC = np.zeros((nz,ns))
 
 #Rate constant
-k1      = k2 = k3 = k4 = k5 = Inh = np.zeros((nz,ns))                           
-RCO     = RHC = RCO2 = RTCO = RTHC = np.zeros((nz,ns))                          
-dHRP    = np.zeros((nz,ns))                                              
+k1 = np.zeros((nz,ns))
+k2 = np.zeros((nz,ns))
+k3 = np.zeros((nz,ns))
+k4 = np.zeros((nz,ns))
+k5 = np.zeros((nz,ns))
+Inh = np.zeros((nz,ns))
+RCO = np.zeros((nz,ns))
+RHC = np.zeros((nz,ns))
+RCO2 = np.zeros((nz,ns))
+RTCO = np.zeros((nz,ns))
+RTHC = np.zeros((nz,ns))
+dHR = np.zeros((nz,ns))
+dHRP = np.zeros((nz,ns))
 
-#Partial Differential Equation                
-Yat = Ybt = Yct = Tkt = np.zeros(nz)                                            #Axial direction (gas and solid phase)
-Yast = Ybst = Ycst =Tkst = np.zeros((nz,ns))                                    #Radial direction (solid phase)
-Tkut = np.zeros((nz,nu))                                                        #Radial direction (solid coerdierite phase) 
+#Thermal effective diffusivity in the washcoat
+k_u = np.zeros((nz,nu))
+rho_u = np.zeros((nz,nu))
+Cp_u = np.zeros((nz,nu))
+Du = np.zeros((nz,nu))
 
+#Derivative groups in radial direction (solid coerdierite phase) 
+Tkuu = np.zeros((nz,nu))
+Tkuuu = np.zeros((nz,nu))
+Tkuzz = np.zeros((nz,nu))                                                        #Radial direction (solid coerdierite phase) 
+
+#Second derivative groups in axial direction (gas and solid phase)
+Yazz = np.zeros(nz)
+Ybzz = np.zeros(nz)
+Yczz = np.zeros(nz)
+Tkzz = np.zeros(nz)
+
+#First derivative groups in axial direction (gas and solid phase)
+Yaz = np.zeros(nz)
+Ybz = np.zeros(nz)
+Ycz = np.zeros(nz)
+Tkz = np.zeros(nz)
+
+#First derivative groups in radial direction (solid phase)
+Yass = np.zeros((nz,ns))
+Ybss = np.zeros((nz,ns))
+Ycss = np.zeros((nz,ns))
+Tkss = np.zeros((nz,ns))
+
+#Second derivative groups in radial direction (solid phase)
+Yasss = np.zeros((nz,ns))
+Ybsss = np.zeros((nz,ns))
+Ycsss = np.zeros((nz,ns))
+Tksss = np.zeros((nz,ns))
+
+#Second derivative groups in radial direction (solid phase)
+Yaszz = np.zeros((nz,ns))
+Ybszz = np.zeros((nz,ns))
+Ycszz = np.zeros((nz,ns))
+Tkszz = np.zeros((nz,ns))
+
+Tkuu = np.zeros((nz,nu))
+Tkuuu = np.zeros((nz,nu))
+Tkuzz = np.zeros((nz,nu))
+
+#Partial Differential Equation
+#Axial direction (gas and solid phase)
+Yat = np.zeros(nz)
+Ybt = np.zeros(nz)
+Yct = np.zeros(nz)
+Tkt = np.zeros(nz)
+
+#Radial direction (solid phase)
+Yast = np.zeros((nz,ns))
+Ybst = np.zeros((nz,ns))
+Ycst = np.zeros((nz,ns))
+Tkst = np.zeros((nz,ns))
+
+#Radial direction (solid coerdierite phase) 
+Tkut = np.zeros((nz,nu))
+    
 #Convert 2D into 1D
 #Axial direction (gas and solid phase)
 Ya      = Ya0*np.ones(nz)
@@ -171,14 +274,14 @@ Y6      = np.insert(Y5,len(Y5),Ycs1)
 Y7      = np.insert(Y6,len(Y6),Tks1)
 
 #Radial direction (solid coerdierite phase)
-Tku = Tk0*np.ones((nz,nu))
+Tku  =Tk0*np.ones((nz,nu))
 Tku1 = Tku.ravel()
 Y = np.insert(Y7,len(Y7),Tku1)
 
 #Equation
 for i in range(0,nz):
 
-    #Bulk diffusion coefficient and dispersion coefficient      
+    #Bulk diffusion coefficient and dispersion coefficient
     v[i]     = vmean*Tk[i]/298                                                                          #Velocity                                                   #m/s
     Dca[i]   = (1.013E-2*Tk[i]**(1.75)*(1/Mco+1/Mair)**(0.5))/(P*(Vco**(0.3333)+Vair**(0.3333))**2)     #Fuller equation (Molecular diffusion coefficient of CO)    #m2/s
     Dcb[i]   = (1.013E-2*Tk[i]**1.75*(1/Mco2+1/Mair)**0.5)/(P*(Vco2**(0.3333)+Vair**(0.3333))**2)       #Fuller equation (Molecular diffusion coefficient of CO2)   #m2/s
@@ -197,12 +300,14 @@ for i in range(0,nz):
     #Gas phase dimensionless number
     miu[i]   = 7.701E-6+4.166E-8*Tk[i]-7.531E-12*Tk[i]**2                                               #Dynamic viscosity                                          #Pa.s
     Rey[i]   = rho_a[i]*vmean*DH/miu[i]                                                                 #Reynolds number
+    Pr      = 0.7                                                                                       #Prandtl number
     L[i]    = (i+1)*dz                                                                                  #Distance from entrance in direction of gas flow                                                                  
     Gz[i]   = Rey[i]*Pr*DH/L[i]                                                                         #Graetz Number
     NuT[i]  = 3.657+8.827*(1000/Gz[i])**-0.545*math.exp(-48.2/Gz[i])                                    #Correlation of Nu for wall temperature (Tronconi and Forzatti)                                     
     NuH[i]  = 4.367+13.18*(1000/Gz[i])**-0.524*math.exp(-60.2/Gz[i])                                    #Correlation of Nu for wall flux        (Hayes)
     Nu[i]   = (NuT[i]+NuH[i])/2+2 
-
+    dHR     = -282.55E3                                                                                 #Heat of reaction of CO                                            #kJ/mol.K
+    
     #Transfer coefficients and assume mass-heat transfer analogy
     Sh[i]   = Nu[i]                                                                                     #Sherwood number
     kma[i]  = Sh[i]*Dca[i]/DH                                                                           #Mass transfer coefficient for CO                           #m/s
@@ -476,7 +581,7 @@ def pde(t,y,Dia,kma,Dib,kmb,Dic,kmc,Dit,hm,Cp_a,rho_a,Deas,RCO,Debs,RCO2,Decs,RH
 
 
 #ODE integration
-f = scipy.integrate.ode(pde).set_integrator('vode',method = 'bdf', order =15,atol = 1E-5, rtol = 1E-5,nsteps=200000)                                #ODE Integrator
+f = scipy.integrate.ode(pde).set_integrator('vode',method = 'bdf', order =15,atol = 1E-5, rtol = 1E-5)                                              #ODE Integrator
 f.set_initial_value(Y,0).set_f_params(Dia,kma,Dib,kmb,Dic,kmc,Dit,hm,Cp_a,rho_a,Deas,RCO,Debs,RCO2,Decs,RHC,Ds,dHRP,rho_s,Cp_s,k_u,rho_u,Cp_u,Du)   #Set intial value to ODE Integrator
 
 #Time
@@ -557,90 +662,92 @@ while f.successful() and f.t < tf:
             Tku1[t,i,jjj] = Tku[i,jjj]
         
 
-for i in range(0,nz):
-
-    #Bulk diffusion coefficient and dispersion coefficient      
-    v[i]     = vmean*Tk[i]/298                                                                          #Velocity                                                   #m/s
-    Dca[i]   = (1.013E-2*Tk[i]**(1.75)*(1/Mco+1/Mair)**(0.5))/(P*(Vco**(0.3333)+Vair**(0.3333))**2)     #Fuller equation (Molecular diffusion coefficient of CO)    #m2/s
-    Dcb[i]   = (1.013E-2*Tk[i]**1.75*(1/Mco2+1/Mair)**0.5)/(P*(Vco2**(0.3333)+Vair**(0.3333))**2)       #Fuller equation (Molecular diffusion coefficient of CO2)   #m2/s
-    Dcc[i]   = (1.013E-2*Tk[i]**1.75*(1/Mc3h8+1/Mair)**0.5)/(P*(Vc3h8**(0.3333)+Vair**(0.3333))**2)     #Fuller equation (Molecular diffusion coefficient of HC)    #m2/s
-    Dia[i]   = Dca[i] + (v[i]*r0)**2.0/(48.0*Dca[i])                                                    #Taylor and Aris (Dispersion coefficient of CO)             #m2/s
-    Dib[i]   = Dcb[i] + (v[i]*r0)**2/(48*Dcb[i])                                                        #Taylor and Aris (Dispersion coefficient of CO2)            #m2/s
-    Dic[i]   = Dcc[i] + (v[i]*r0)**2/(48*Dcc[i])                                                        #Taylor and Aris (Dispersion coefficient of HC)             #m2/s
-
-    #Thermal diffusion coefficient in the fluid (Air)
-    k_a[i]   = 1.679E-2+5.073E-5*Tk[i]                                                                  #Thermal conductivity                                       #W/mK
-    rho_a[i] = P*Mair/(1000*R*Tk[i])                                                                    #Fluid density of air                                       #kg/m3
-    Cp_a[i]  = (28.09+1.965E-3*Tk[i]+4.799E-6*Tk[i]**2-1.965E-9*Tk[i]**3)/(Mair/1000)                   #Specific heat of air                                       #J/kgK
-    Dt[i]    = k_a[i]/(rho_a[i]*Cp_a[i])                                                                #Thermal diffusivity                                        #m2/s
-    Dit[i]   = Dt[i]+(v[i]*r0)**2/(48*Dt[i])                                                            #Taylor and Aris (Dispersion coefficient of air)            #m2/s
-
-    #Gas phase dimensionless number
-    miu[i]   = 7.701E-6+4.166E-8*Tk[i]-7.531E-12*Tk[i]**2                                               #Dynamic viscosity                                          #Pa.s
-    Rey[i]   = rho_a[i]*vmean*DH/miu[i]                                                                 #Reynolds number
-    L[i]    = (i+1)*dz                                                                                  #Distance from entrance in direction of gas flow                                                                  
-    Gz[i]   = Rey[i]*Pr*DH/L[i]                                                                         #Graetz Number
-    NuT[i]  = 3.657+8.827*(1000/Gz[i])**-0.545*math.exp(-48.2/Gz[i])                                    #Correlation of Nu for wall temperature (Tronconi and Forzatti)                                     
-    NuH[i]  = 4.367+13.18*(1000/Gz[i])**-0.524*math.exp(-60.2/Gz[i])                                    #Correlation of Nu for wall flux        (Hayes)
-    Nu[i]   = (NuT[i]+NuH[i])/2+2 
-
-    #Transfer coefficients and assume mass-heat transfer analogy
-    Sh[i]   = Nu[i]                                                                                     #Sherwood number
-    kma[i]  = Sh[i]*Dca[i]/DH                                                                           #Mass transfer coefficient for CO                           #m/s
-    kmb[i]  = Sh[i]*Dcb[i]/DH                                                                           #Mass transfer coefficient for CO2                          #m/s
-    kmc[i]  = Sh[i]*Dcc[i]/DH                                                                           #Mass transfer coefficient for HC                           #m/s
-    hm[i]   = Nu[i]*k_a[i]/DH                                                                           #Heat transfer coefficient for CO                           #W/(m2.K)                          #m/s
-           
-for jj in range (0,ns):
     for i in range(0,nz):
 
-        #Mole fraction in solid phase
-        YCO[i,jj]   = Yas [i,jj]                                                                                        #Carbon monoxide
-        YCO2[i,jj]  = Ybs[i,jj]                                                                                         #Carbon dioxide
-        YHC[i,jj]   = Ycs[i,jj]                                                                                         #Hydrocarbon
+        #Bulk diffusion coefficient and dispersion coefficient      
+        v[i]     = vmean*Tk[i]/298                                                                          #Velocity                                                   #m/s
+        Dca[i]   = (1.013E-2*Tk[i]**(1.75)*(1/Mco+1/Mair)**(0.5))/(P*(Vco**(0.3333)+Vair**(0.3333))**2)     #Fuller equation (Molecular diffusion coefficient of CO)    #m2/s
+        Dcb[i]   = (1.013E-2*Tk[i]**1.75*(1/Mco2+1/Mair)**0.5)/(P*(Vco2**(0.3333)+Vair**(0.3333))**2)       #Fuller equation (Molecular diffusion coefficient of CO2)   #m2/s
+        Dcc[i]   = (1.013E-2*Tk[i]**1.75*(1/Mc3h8+1/Mair)**0.5)/(P*(Vc3h8**(0.3333)+Vair**(0.3333))**2)     #Fuller equation (Molecular diffusion coefficient of HC)    #m2/s
+        Dia[i]   = Dca[i] + (v[i]*r0)**2.0/(48.0*Dca[i])                                                    #Taylor and Aris (Dispersion coefficient of CO)             #m2/s
+        Dib[i]   = Dcb[i] + (v[i]*r0)**2/(48*Dcb[i])                                                        #Taylor and Aris (Dispersion coefficient of CO2)            #m2/s
+        Dic[i]   = Dcc[i] + (v[i]*r0)**2/(48*Dcc[i])                                                        #Taylor and Aris (Dispersion coefficient of HC)             #m2/s
 
-        #Effecitive diffusivity
-        Dcas[i,jj] = (1.013E-2*Tks[i,jj]**1.75*(1/Mco+1/Mair)**(0.5))/(P*(Vco**(0.3333)+Vair**(0.3333))**2)             #Fuller equation (Molecular diffusion coefficient of CO)     #m2/s
-        Dcbs[i,jj] = (1.013E-2*Tks[i,jj]**1.75*(1/Mco2+1/Mair)**0.5)/(P*(Vco2**(0.3333)+Vair**(0.3333))**2)             #Fuller equation (Molecular diffusion coefficient of CO2)    #m2/s
-        Dccs[i,jj] = (1.013E-2*Tks[i,jj]**1.75*(1/Mc3h8+1/Mair)**0.5)/(P*(Vc3h8**(0.3333)+Vair**(0.3333))**2)           #Fuller equation (Molecular diffusion coefficient of HC)     #m2/s
-        Dkas[i,jj] = 97.0*re*(Tks[i,jj]/Mco)**0.5                                                                       #Knudsen diffusion coefficiet of CO                          #m2/s
-        Dkbs[i,jj] = 97.0*re*(Tks[i,jj]/Mco2)**0.5                                                                      #Knudsen diffusion coefficient of CO2                        #m2/s
-        Dkcs[i,jj] = 97.0*re*(Tks[i,jj]/Mc3h8)**0.5                                                                     #Knudsen diffusion coefficientof HC                          #m2/s
-        Dvas[i,jj] = 1/(1/Dcas[i,jj]+1/Dkas[i,jj])                                                                      #Diffusion coefficient in the pore for CO                    #m2/s                                                                 #Knudsen diffusion coefficient of CO
-        Dvbs[i,jj] = 1/(1/Dcbs[i,jj]+1/Dkbs[i,jj])                                                                      #Diffusion coefficient in the pore for CO2                   #m2/s
-        Dvcs[i,jj] = 1/(1/Dccs[i,jj]+1/Dkcs[i,jj])                                                                      #Diffusion coefficient in the pore for HC                    #m2/s
-        Deas[i,jj] = ff*por*Dvas[i,jj]/tau                                                                              #Effective Diffusivity of CO                                 #m2/s 
-        Debs[i,jj] = ff*por*Dvbs[i,jj]/tau                                                                              #Effective Diffusivity of CO2                                #m2/s
-        Decs[i,jj] = ff*por*Dvcs[i,jj]/tau                                                                              #Effective Diffusivity of HC                                 #m2/s
+        #Thermal diffusion coefficient in the fluid (Air)
+        k_a[i]   = 1.679E-2+5.073E-5*Tk[i]                                                                  #Thermal conductivity                                       #W/mK
+        rho_a[i] = P*Mair/(1000*R*Tk[i])                                                                    #Fluid density of air                                       #kg/m3
+        Cp_a[i]  = (28.09+1.965E-3*Tk[i]+4.799E-6*Tk[i]**2-1.965E-9*Tk[i]**3)/(Mair/1000)                   #Specific heat of air                                       #J/kgK
+        Dt[i]    = k_a[i]/(rho_a[i]*Cp_a[i])                                                                #Thermal diffusivity                                        #m2/s
+        Dit[i]   = Dt[i]+(v[i]*r0)**2/(48*Dt[i])                                                            #Taylor and Aris (Dispersion coefficient of air)            #m2/s
 
-        #Thermal effective diffusivity in washcoat
-        k_s[i,jj]   = 0.9558-2.09E-4*Tks[i,jj]                                                                          #Soid thermal conductivity                                   #W/mK                                          
-        rho_s[i,jj] = rho_wc/1000                                                                                       #Washcoat density                                            #kg/m3
-        Cp_s[i,jj]  = 948 + 0.2268*Tks[i,jj]                                                                            #Specific heat capacity of solid                             #J/kgK
-        Ds[i,jj]    = k_s[i,jj]/(rho_s[i,jj]*Cp_s[i,jj])                                                                #Thermal diffusivity                                         #m2/s
+        #Gas phase dimensionless number
+        miu[i]   = 7.701E-6+4.166E-8*Tk[i]-7.531E-12*Tk[i]**2                                               #Dynamic viscosity                                          #Pa.s
+        Rey[i]   = rho_a[i]*vmean*DH/miu[i]                                                                 #Reynolds number
+        Pr      = 0.7                                                                                       #Prandtl number
+        L[i]    = (i+1)*dz                                                                                  #Distance from entrance in direction of gas flow                                                                  
+        Gz[i]   = Rey[i]*Pr*DH/L[i]                                                                         #Graetz Number
+        NuT[i]  = 3.657+8.827*(1000/Gz[i])**-0.545*math.exp(-48.2/Gz[i])                                    #Correlation of Nu for wall temperature (Tronconi and Forzatti)                                     
+        NuH[i]  = 4.367+13.18*(1000/Gz[i])**-0.524*math.exp(-60.2/Gz[i])                                    #Correlation of Nu for wall flux        (Hayes)
+        Nu[i]   = (NuT[i]+NuH[i])/2+2 
+        dHR     = -282.55E3                                                                                 #Heat of reaction of CO                                            #kJ/mol.K
 
-        #Rate constant
-        k1[i,jj]    = pf*math.exp(act1/Tks[i,jj])                                                                       #Numerator for CO
-        k2[i,jj]    = pg*math.exp(act2/Tks[i,jj])                                                                       #Denominator (Inhibition term)
-        k3[i,jj]    = pt*math.exp(act3/Tks[i,jj])                                                                       #Numerator for HC
-        k4[i,jj]    = pv*math.exp(act4/Tks[i,jj])                                                                       #Denominator (Inhibition term)
-        k5[i,jj]    = pw*math.exp(act5/Tks[i,jj])                                                                       #Denominator,extra
-        Inh[i,jj]   = Tks[i,jj]*(1+k2[i,jj]*YCO[i,jj]+k4[i,jj]*YHC[i,jj])**2*(1+k5[i,jj]*(YCO[i,jj])**2*(YHC[i,jj])**2) #Inhibition term      
-        RCO[i,jj]   = k1[i,jj]*YCO[i,jj]*YO2/Inh[i,jj]*R*Tks[i,jj]/P                                                    #Unit conversion                                             #m3(CO)/mol(Pt)s
-        RHC[i,jj]   = k3[i,jj]*YHC[i,jj]*YO2/Inh[i,jj]*R*Tks[i,jj]/P                                                    #Unit conversion                                             #m3(HC)/mol(Pt)s
-        RCO2[i,jj]  = RCO[i,jj]+RHC[i,jj]                                                                               #Unit conversion                                             #m3(CO2)/mol(Pt)s
-        RTCO[i,jj]  = k1[i,jj]*YCO[i,jj]*YO2/Inh[i,jj]                                                                  #Unit conversion                                             #mol(CO)/mol(Pt) s
-        RTHC[i,jj]  = k3[i,jj]*YHC[i,jj]*YO2/Inh[i,jj]                                                                  #Unit conversion                                             #mol(HC)/mol(Pt) s
-        dHRP[i,jj]  = -2.059E6+72.3*Tks[i,jj]-9.69E-2*Tks[i,jj]**2+4.34E-5*Tks[i,jj]**3+7.56e-9*Tks[i,jj]**4            #Heat of reaction for HC                                     #kJ/mol.K
+        #Transfer coefficients and assume mass-heat transfer analogy
+        Sh[i]   = Nu[i]                                                                                     #Sherwood number
+        kma[i]  = Sh[i]*Dca[i]/DH                                                                           #Mass transfer coefficient for CO                           #m/s
+        kmb[i]  = Sh[i]*Dcb[i]/DH                                                                           #Mass transfer coefficient for CO2                          #m/s
+        kmc[i]  = Sh[i]*Dcc[i]/DH                                                                           #Mass transfer coefficient for HC                           #m/s
+        hm[i]   = Nu[i]*k_a[i]/DH                                                                           #Heat transfer coefficient for CO                           #W/(m2.K)                          #m/s
+               
+    for jj in range (0,ns):
+        for i in range(0,nz):
 
-for jjj in range(0,nu):
-    for i in range(0,nz):
+            #Mole fraction in solid phase
+            YCO[i,jj]   = Yas [i,jj]                                                                                        #Carbon monoxide
+            YCO2[i,jj]  = Ybs[i,jj]                                                                                         #Carbon dioxide
+            YHC[i,jj]   = Ycs[i,jj]                                                                                         #Hydrocarbon
 
-        #Thermal effective diffusivity in the washcoat
-            k_u[i,jjj]   = 5.423e-9*Tku[i,jjj]**3-1.276e-5*Tku[i,jjj]**2+8.107e-3*Tku[i,jjj]+7.975e-1                   #Solid thermal conductivity                                  #W/m.K               
-            rho_u[i,jjj] = rho_cord/1000                                                                                #Density of substrate                                        #kg/m3
-            Cp_u[i,jjj]  = 1071 + 0.156*Tku[i,jjj]-3.437E7*Tku[i,jjj]**-2                                               #Specific heat capacity of washcoat                          #J/kg.K
-            Du[i,jjj]    = k_u[i,jjj]/(rho_u[i,jjj]*Cp_u[i,jjj])                                                        #Thermal diffusivity                                         #m2/s
+            #Effecitive diffusivity
+            Dcas[i,jj] = (1.013E-2*Tks[i,jj]**1.75*(1/Mco+1/Mair)**(0.5))/(P*(Vco**(0.3333)+Vair**(0.3333))**2)             #Fuller equation (Molecular diffusion coefficient of CO)     #m2/s
+            Dcbs[i,jj] = (1.013E-2*Tks[i,jj]**1.75*(1/Mco2+1/Mair)**0.5)/(P*(Vco2**(0.3333)+Vair**(0.3333))**2)             #Fuller equation (Molecular diffusion coefficient of CO2)    #m2/s
+            Dccs[i,jj] = (1.013E-2*Tks[i,jj]**1.75*(1/Mc3h8+1/Mair)**0.5)/(P*(Vc3h8**(0.3333)+Vair**(0.3333))**2)           #Fuller equation (Molecular diffusion coefficient of HC)     #m2/s
+            Dkas[i,jj] = 97.0*re*(Tks[i,jj]/Mco)**0.5                                                                       #Knudsen diffusion coefficiet of CO                          #m2/s
+            Dkbs[i,jj] = 97.0*re*(Tks[i,jj]/Mco2)**0.5                                                                      #Knudsen diffusion coefficient of CO2                        #m2/s
+            Dkcs[i,jj] = 97.0*re*(Tks[i,jj]/Mc3h8)**0.5                                                                     #Knudsen diffusion coefficientof HC                          #m2/s
+            Dvas[i,jj] = 1/(1/Dcas[i,jj]+1/Dkas[i,jj])                                                                      #Diffusion coefficient in the pore for CO                    #m2/s                                                                 #Knudsen diffusion coefficient of CO
+            Dvbs[i,jj] = 1/(1/Dcbs[i,jj]+1/Dkbs[i,jj])                                                                      #Diffusion coefficient in the pore for CO2                   #m2/s
+            Dvcs[i,jj] = 1/(1/Dccs[i,jj]+1/Dkcs[i,jj])                                                                      #Diffusion coefficient in the pore for HC                    #m2/s
+            Deas[i,jj] = ff*por*Dvas[i,jj]/tau                                                                              #Effective Diffusivity of CO                                 #m2/s 
+            Debs[i,jj] = ff*por*Dvbs[i,jj]/tau                                                                              #Effective Diffusivity of CO2                                #m2/s
+            Decs[i,jj] = ff*por*Dvcs[i,jj]/tau                                                                              #Effective Diffusivity of HC                                 #m2/s
+
+            #Thermal effective diffusivity in washcoat
+            k_s[i,jj]   = 0.9558-2.09E-4*Tks[i,jj]                                                                          #Soid thermal conductivity                                   #W/mK                                          
+            rho_s[i,jj] = rho_wc/1000                                                                                       #Washcoat density                                            #kg/m3
+            Cp_s[i,jj]  = 948 + 0.2268*Tks[i,jj]                                                                            #Specific heat capacity of solid                             #J/kgK
+            Ds[i,jj]    = k_s[i,jj]/(rho_s[i,jj]*Cp_s[i,jj])                                                                #Thermal diffusivity                                         #m2/s
+
+            #Rate constant
+            k1[i,jj]    = pf*math.exp(act1/Tks[i,jj])                                                                       #Numerator for CO
+            k2[i,jj]    = pg*math.exp(act2/Tks[i,jj])                                                                       #Denominator (Inhibition term)
+            k3[i,jj]    = pt*math.exp(act3/Tks[i,jj])                                                                       #Numerator for HC
+            k4[i,jj]    = pv*math.exp(act4/Tks[i,jj])                                                                       #Denominator (Inhibition term)
+            k5[i,jj]    = pw*math.exp(act5/Tks[i,jj])                                                                       #Denominator,extra
+            Inh[i,jj]   = Tks[i,jj]*(1+k2[i,jj]*YCO[i,jj]+k4[i,jj]*YHC[i,jj])**2*(1+k5[i,jj]*(YCO[i,jj])**2*(YHC[i,jj])**2) #Inhibition term      
+            RCO[i,jj]   = k1[i,jj]*YCO[i,jj]*YO2/Inh[i,jj]*R*Tks[i,jj]/P                                                    #Unit conversion                                             #m3(CO)/mol(Pt)s
+            RHC[i,jj]   = k3[i,jj]*YHC[i,jj]*YO2/Inh[i,jj]*R*Tks[i,jj]/P                                                    #Unit conversion                                             #m3(HC)/mol(Pt)s
+            RCO2[i,jj]  = RCO[i,jj]+RHC[i,jj]                                                                               #Unit conversion                                             #m3(CO2)/mol(Pt)s
+            RTCO[i,jj]  = k1[i,jj]*YCO[i,jj]*YO2/Inh[i,jj]                                                                  #Unit conversion                                             #mol(CO)/mol(Pt) s
+            RTHC[i,jj]  = k3[i,jj]*YHC[i,jj]*YO2/Inh[i,jj]                                                                  #Unit conversion                                             #mol(HC)/mol(Pt) s
+            dHRP[i,jj]  = -2.059E6+72.3*Tks[i,jj]-9.69E-2*Tks[i,jj]**2+4.34E-5*Tks[i,jj]**3+7.56e-9*Tks[i,jj]**4            #Heat of reaction for HC                                     #kJ/mol.K
+
+    for jjj in range(0,nu):
+        for i in range(0,nz):
+
+            #Thermal effective diffusivity in the washcoat
+                k_u[i,jjj]   = 5.423e-9*Tku[i,jjj]**3-1.276e-5*Tku[i,jjj]**2+8.107e-3*Tku[i,jjj]+7.975e-1                   #Solid thermal conductivity                                  #W/m.K               
+                rho_u[i,jjj] = rho_cord/1000                                                                                #Density of substrate                                        #kg/m3
+                Cp_u[i,jjj]  = 1071 + 0.156*Tku[i,jjj]-3.437E7*Tku[i,jjj]**-2                                               #Specific heat capacity of washcoat                          #J/kg.K
+                Du[i,jjj]    = k_u[i,jjj]/(rho_u[i,jjj]*Cp_u[i,jjj])                                                        #Thermal diffusivity                                         #m2/s
             
     print (f.t) #Print time
     t+= 1 
@@ -662,7 +769,7 @@ for t in range (0,nout):
     rt1=150.0                                    # Linear ramp time     #s
     rt2=150.0                                    # Linear ramp time     #s
     Tkem=543.0                                   # Max Temperature      #K
-    mp1=(Tkem-Tke)/rt1                          # Gradient 1
+    mp1=(Tkef2-Tke)/rt1                          # Gradient 1
     mp2=(Tke-Tkem)/rt2                          # Gradient 2
     
     if t<rt1+1:             
