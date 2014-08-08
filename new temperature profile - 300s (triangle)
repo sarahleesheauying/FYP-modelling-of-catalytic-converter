@@ -137,7 +137,7 @@ Deas    = Debs = Decs = np.zeros((nz,ns))
 #Rate constant
 k1      = k2 = k3 = k4 = k5 = Inh = np.zeros((nz,ns))                           
 RCO     = RHC = RCO2 = RTCO = RTHC = np.zeros((nz,ns))                          
-dHR     = dHRP = np.zeros((nz,ns))                                              
+dHRP    = np.zeros((nz,ns))                                              
 
 #Partial Differential Equation                
 Yat = Ybt = Yct = Tkt = np.zeros(nz)                                            #Axial direction (gas and solid phase)
@@ -156,18 +156,23 @@ Y2      = np.insert(Y1,len(Y1),Yc)
 Y3      = np.insert(Y2,len(Y2),Tk)
         
 #Radial direction (solid phase)
-Yas     = Yas.ravel(Ya0*np.ones((nz,ns)))
-Ybs     = Ybs.ravel(Yb0*np.ones((nz,ns)))
-Ycs     = Ycs.ravel(Yc0*np.ones((nz,ns)))
-Tks     = Tks.ravel(Tk0*np.ones((nz,ns)))
+Yas     = Ya0*np.ones((nz,ns))
+Ybs     = Yb0*np.ones((nz,ns))
+Ycs     = Yc0*np.ones((nz,ns))
+Tks     = Tk0*np.ones((nz,ns))
+Yas1     = Yas.ravel()
+Ybs1     = Ybs.ravel()
+Ycs1     = Ycs.ravel()
+Tks1     = Tks.ravel()
 
-Y4      = np.insert(Y3,len(Y3),Yas)
-Y5      = np.insert(Y4,len(Y4),Ybs)
-Y6      = np.insert(Y5,len(Y5),Ycs)
-Y7      = np.insert(Y6,len(Y6),Tks)
+Y4      = np.insert(Y3,len(Y3),Yas1)
+Y5      = np.insert(Y4,len(Y4),Ybs1)
+Y6      = np.insert(Y5,len(Y5),Ycs1)
+Y7      = np.insert(Y6,len(Y6),Tks1)
 
-#Radial direction (solid coerdierite phase)          
-Tku1 = Tku.ravel(Tk0*np.ones((nz,nu)))
+#Radial direction (solid coerdierite phase)
+Tku = Tk0*np.ones((nz,nu))
+Tku1 = Tku.ravel()
 Y = np.insert(Y7,len(Y7),Tku1)
 
 #Equation
@@ -285,8 +290,8 @@ def pde(t,y,Dia,kma,Dib,kmb,Dic,kmc,Dit,hm,Cp_a,rho_a,Deas,RCO,Debs,RCO2,Decs,RH
     rt1=150.0                # Linear ramp time     #s
     rt2=150.0                # Linear ramp time     #s
     Tkem=543.0               # Max Temperature      #K
-    mp1=(Tkef2-Tke)/rt1      # Gradient 1
-    mp2=(Tke-Tkef2)/rt2      # Gradient 2
+    mp1=(Tkem-Tke)/rt1      # Gradient 1
+    mp2=(Tke-Tkem)/rt2      # Gradient 2
     
     if f.t<rt1+1:             
         Tkee=Tke+mp1*f.t
@@ -475,7 +480,7 @@ f = scipy.integrate.ode(pde).set_integrator('vode',method = 'bdf', order =15,ato
 f.set_initial_value(Y,0).set_f_params(Dia,kma,Dib,kmb,Dic,kmc,Dit,hm,Cp_a,rho_a,Deas,RCO,Debs,RCO2,Decs,RHC,Ds,dHRP,rho_s,Cp_s,k_u,rho_u,Cp_u,Du)   #Set intial value to ODE Integrator
 
 #Time
-time    = [] # To store time
+time    = [] # To sotre time
 t       = 1  # Set time postion 1
 
 #Set array to zeros
@@ -552,7 +557,7 @@ while f.successful() and f.t < tf:
             Tku1[t,i,jjj] = Tku[i,jjj]
         
 
- i in range(0,nz):
+for i in range(0,nz):
 
     #Bulk diffusion coefficient and dispersion coefficient      
     v[i]     = vmean*Tk[i]/298                                                                          #Velocity                                                   #m/s
@@ -657,14 +662,14 @@ for t in range (0,nout):
     rt1=150.0                                    # Linear ramp time     #s
     rt2=150.0                                    # Linear ramp time     #s
     Tkem=543.0                                   # Max Temperature      #K
-    mp1=(Tkef2-Tke)/rt1                          # Gradient 1
-    mp2=(Tke-Tkef2)/rt2                          # Gradient 2
+    mp1=(Tkem-Tke)/rt1                          # Gradient 1
+    mp2=(Tke-Tkem)/rt2                          # Gradient 2
     
     if t<rt1+1:             
         Tkee[t]=Tke+mp1*t
         
     elif t>rt1:             
-        Tkee[t]=Tkef2-mp2*(rt1-t)        
+        Tkee[t]=Tkem-mp2*(rt1-t)        
         
     else:
         Tkee[t]=Tke    
@@ -673,7 +678,7 @@ for t in range (0,nout):
 plot.figure(1)
 plot.plot(time[:300],Tk1[:300,nz-1],label='Tk(nz)')
 plot.plot(time[:300],Tks1[:300,1,1],label='Tks(1,1)')
-plot.plot(time[:300],Tks1[:300,1,1],label='Tku(1,1)')
+plot.plot(time[:300],Tku1[:300,1,1],label='Tku(1,1)')
 plot.plot(time[:300],Tkee[:300],label='Entering T')
 plot.title('Temperature profile')
 plot.grid()
@@ -683,8 +688,8 @@ plot.legend()
 plot.show()
 
 plot.figure(2)
-plot.plot(time[:300],Ya1[:300,nz-1])
-plot.plot(time[:300],Yb1[:300,nz-1])
+plot.plot(time[:300],Ya1[:300,nz-1],label='Ya')
+plot.plot(time[:300],Yb1[:300,nz-1],label='Yb')
 plot.title('Ya and Yb(r=0,z=L,t)')
 plot.grid()
 plot.xlabel('Time,s')
@@ -698,7 +703,6 @@ plot.title('Yc(r=0,z=L,t)')
 plot.grid()
 plot.xlabel('Time,s')
 plot.ylabel('HC mol fraction')
-plot.legend()
 plot.show()
 
 plot.figure(4)
